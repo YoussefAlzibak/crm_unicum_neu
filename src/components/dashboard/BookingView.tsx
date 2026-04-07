@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useOrg } from '../../context/OrgContext';
+import { useOrg } from '../../contexts/OrgContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, Plus, Settings, AlertCircle, ExternalLink } from 'lucide-react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
