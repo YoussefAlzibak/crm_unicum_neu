@@ -54,7 +54,7 @@ interface DealCardProps {
   colorClass: string;
   onEdit: (d: Deal) => void;
   onDelete: (id: string) => void;
-  onDragStart: (e: React.DragEvent, dealId: string) => void;
+  onDragStart: (e: any, dealId: string) => void;
 }
 const DealCard = ({ deal, colorClass, onEdit, onDelete, onDragStart }: DealCardProps) => {
   const [menu, setMenu] = useState(false);
@@ -335,12 +335,12 @@ const PipelineView = () => {
   };
 
   // ── Drag and Drop ───────────────────────────────────────────────────────────
-  const handleDragStart = (e: React.DragEvent, dealId: string) => {
+  const handleDragStart = (e: any, dealId: string) => {
     draggingDealId.current = dealId;
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, stageId: string) => {
+  const handleDrop = async (e: any, stageId: string) => {
     e.preventDefault();
     const id = draggingDealId.current;
     if (!id || id === stageId) { setDragOverStage(null); return; }

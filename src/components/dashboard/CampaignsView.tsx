@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, queueEmail } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
 import {
   Mail, Send, Calendar, Plus, Eye, Trash2, Edit3, BarChart3,
@@ -236,10 +236,43 @@ const CampaignsView = () => {
       audience_filter: draft.audience_filter,
     };
 
+    let campaignId = selectedCampaign?.id;
+
     if (selectedCampaign) {
       await supabase.from('email_campaigns').update(payload).eq('id', selectedCampaign.id);
     } else {
-      await supabase.from('email_campaigns').insert({ ...payload, org_id: currentOrg.id });
+      const { data: newCampaign } = await supabase.from('email_campaigns').insert({ ...payload, org_id: currentOrg.id }).select().single();
+      if (newCampaign) {
+        campaignId = newCampaign.id;
+      }
+    }
+
+    if (status === 'scheduled' && !draft.scheduled_for) {
+       // if they click Send immediately without scheduling, we trigger the workflow logic now.
+       const { data: contacts } = await supabase.from('contacts').select('*').eq('org_id', currentOrg.id);
+       if (contacts) {
+         let filtered = contacts;
+         const tags = draft.audience_filter?.tags || [];
+         if (tags.length > 0) {
+            filtered = contacts.filter(c => c.tags?.some((t: string) => tags.includes(t)));
+         }
+
+         await Promise.all(filtered.map(contact => {
+           if (contact.email) {
+             return queueEmail(
+               currentOrg.id,
+               contact.email,
+               draft.subject,
+               draft.html_body,
+               '',
+               campaignId,
+               contact.id
+             );
+           }
+         }));
+
+         await supabase.from('email_campaigns').update({ status: 'sent' }).eq('id', campaignId);
+       }
     }
 
     setSaving(false);
@@ -253,7 +286,7 @@ const CampaignsView = () => {
     setCampaigns(c => c.filter(x => x.id !== id));
   };
 
-  const useStarterTemplate = async (tpl: typeof STARTER_TEMPLATES[0]) => {
+  const loadStarterTemplate = async (tpl: typeof STARTER_TEMPLATES[0]) => {
     if (!currentOrg) return;
     const { data } = await supabase.from('email_templates').insert({ org_id: currentOrg.id, name: tpl.name, subject: tpl.subject, html_body: tpl.html_body }).select().single();
     if (data) { await fetchTemplates(); }
@@ -415,7 +448,7 @@ const CampaignsView = () => {
                       <h4 className="font-bold text-lg group-hover:text-indigo-400 transition-colors">{tpl.name}</h4>
                       <p className="text-xs text-gray-500 mt-1 leading-relaxed">{tpl.subject}</p>
                     </div>
-                    <button onClick={() => useStarterTemplate(tpl)} className="w-full py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-sm font-bold rounded-2xl border border-indigo-500/20 transition-all">
+                    <button onClick={() => loadStarterTemplate(tpl)} className="w-full py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-sm font-bold rounded-2xl border border-indigo-500/20 transition-all">
                       Als Vorlage speichern
                     </button>
                   </motion.div>
