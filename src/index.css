@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Changa", ui-sans-serif, system-ui, sans-serif;
+  --font-orbitron: "Orbitron", sans-serif;
+  --font-marske: "Marske", sans-serif;
+  
+  --color-primary: #8a2be2;
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-white selection:bg-purple-600 selection:text-white;
+  }
+}
+
+.glass {
+  @apply bg-white/5 backdrop-blur-lg border border-white/10;
+}

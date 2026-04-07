@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "features": "Features",
+    "contact": "Contact",
+    "getStarted": "Get Started"
+  },
+  "hero": {
+    "badge": "Digital Transformation",
+    "title": "Building the Future of Your Business",
+    "subtitle": "Professional web design, CRM systems & SEO solutions from a single source. Strengthen your digital presence and win new customers with Unicum Tech.",
+    "cta_primary": "Free Consultation",
+    "cta_secondary": "Our Services",
+    "whatsapp_status": "Available now on WhatsApp",
+    "gdpr_status": "GDPR compliant & secure",
+    "rating": "4.9/5 user rating"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Everything you need to succeed online.",
+    "learnMore": "Learn More",
+    "web": {
+      "title": "Web Development",
+      "description": "Custom websites and apps that convert and strengthen your brand."
+    },
+    "crm": {
+      "title": "CRM Systems",
+      "description": "Centralize your customer data and automate your sales processes."
+    },
+    "inbox": {
+      "title": "Unified Inbox",
+      "description": "All messages from WhatsApp, Email, and Social Media in one place."
+    },
+    "booking": {
+      "title": "Appointment Booking",
+      "description": "Automated booking systems that fill your calendar 24/7."
+    },
+    "print": {
+      "title": "Reputation",
+      "description": "Automatically gather positive Google reviews and increase trust."
+    },
+    "memberships": {
+      "title": "Member Areas",
+      "description": "Sell your expert knowledge through exclusive member platforms."
+    },
+    "social": {
+      "title": "Social Media",
+      "description": "Professional marketing for more reach and visibility."
+    }
+  },
+  "features": {
+    "reputation": {
+      "title": "Reputation Management",
+      "description": "Gain your customers' trust through authentic reviews.",
+      "point1": "Automated review requests",
+      "point2": "Central dashboard for all reviews",
+      "point3": "Direct interaction with customers"
+    },
+    "crm": {
+      "title": "Smart CRM System",
+      "description": "Manage your leads efficiently and never miss a sales opportunity.",
+      "point1": "Easy contact management",
+      "point2": "Automated email sequences",
+      "point3": "Detailed sales pipelines"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Let's talk about your next web project.",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send Message"
+    },
+    "address": {
+      "title": "Address"
+    },
+    "email": {
+      "title": "Email"
+    },
+    "phone": {
+      "title": "Phone"
+    }
+  },
+  "footer": {
+    "description": "We help companies become successful online with unique web design & smart systems.",
+    "legal": {
+      "title": "Legal",
+      "imprint": "Imprint",
+      "privacy": "Privacy Policy",
+      "terms": "Terms & Conditions"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Stay up to date with our latest web solutions!",
+      "submit": "Join"
+    },
+    "rights": "© {{year}} Unicum Tech. All rights reserved."
+  }
+}

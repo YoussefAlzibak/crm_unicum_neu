@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Leistungen",
+    "features": "Vorteile",
+    "contact": "Kontakt",
+    "getStarted": "Jetzt Starten"
+  },
+  "hero": {
+    "badge": "Digitale Transformation",
+    "title": "Wir bauen die Zukunft Ihres Business",
+    "subtitle": "Professionelles Webdesign, CRM-Systeme & SEO-Lösungen aus einer Hand. Stärken Sie Ihre digitale Präsenz und gewinnen Sie neue Kunden mit Unicum Tech.",
+    "cta_primary": "Kostenloses Erstgespräch",
+    "cta_secondary": "Unsere Leistungen",
+    "whatsapp_status": "Sofort verfügbar via WhatsApp",
+    "gdpr_status": "DSGVO-konform & sicher",
+    "rating": "4.9/5 Nutzerbewertung"
+  },
+  "services": {
+    "title": "Unsere Leistungen",
+    "subtitle": "Alles was Sie brauchen, um online erfolgreich zu sein.",
+    "learnMore": "Mehr erfahren",
+    "web": {
+      "title": "Webentwicklung",
+      "description": "Individuelle Webseiten und Apps, die konvertieren und Ihre Marke stärken."
+    },
+    "crm": {
+      "title": "CRM-Systeme",
+      "description": "Zentralisieren Sie Ihre Kundendaten und automatisieren Sie Ihre Vertriebsprozesse."
+    },
+    "inbox": {
+      "title": "Zentrale Inbox",
+      "description": "Alle Nachrichten von WhatsApp, E-Mail und Social Media an einem Ort."
+    },
+    "booking": {
+      "title": "Terminbuchung",
+      "description": "Automatisierte Buchungssysteme, die Ihren Kalender rund um die Uhr füllen."
+    },
+    "print": {
+      "title": "Reputation",
+      "description": "Sammeln Sie automatisch positive Google-Bewertungen und steigern Ihr Vertrauen."
+    },
+    "memberships": {
+      "title": "Mitgliederbereiche",
+      "description": "Verkaufen Sie Ihr Expertenwissen über exklusive Plattformen."
+    },
+    "social": {
+      "title": "Social Media",
+      "description": "Professionelles Marketing für mehr Reichweite und Sichtbarkeit."
+    }
+  },
+  "features": {
+    "reputation": {
+      "title": "Reputations-Management",
+      "description": "Gewinnen Sie das Vertrauen Ihrer Kunden durch authentische Bewertungen.",
+      "point1": "Automatisierte Bewertungsanfragen",
+      "point2": "Zentrales Dashboard für alle Reviews",
+      "point3": "Direkte Interaktion mit Kunden"
+    },
+    "crm": {
+      "title": "Smart CRM System",
+      "description": "Verwalten Sie Ihre Leads effizient und verpassen Sie keine Verkaufschance.",
+      "point1": "Einfache Kontaktverwaltung",
+      "point2": "Automatisierte E-Mail-Sequenzen",
+      "point3": "Detaillierte Sales-Pipelines"
+    }
+  },
+  "contact": {
+    "title": "Kontaktieren Sie uns",
+    "subtitle": "Lassen Sie uns gemeinsam über Ihr nächstes Web-Projekt sprechen.",
+    "form": {
+      "name": "Name",
+      "email": "E-Mail",
+      "message": "Nachricht",
+      "submit": "Nachricht senden"
+    },
+    "address": {
+      "title": "Adresse"
+    },
+    "email": {
+      "title": "E-Mail"
+    },
+    "phone": {
+      "title": "Telefon"
+    }
+  },
+  "footer": {
+    "description": "Wir helfen Unternehmen mit einzigartigem Webdesign & smarten Systemen online erfolgreich zu sein.",
+    "legal": {
+      "title": "Rechtliches",
+      "imprint": "Impressum",
+      "privacy": "Datenschutz",
+      "terms": "AGB"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Bleiben Sie auf dem Laufenden mit unseren neuesten Web-Lösungen!",
+      "submit": "Abo"
+    },
+    "rights": "© {{year}} Unicum Tech. Alle Rechte vorbehalten."
+  }
+}
