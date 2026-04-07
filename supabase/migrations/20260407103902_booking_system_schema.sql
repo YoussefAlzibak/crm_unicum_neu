@@ -38,15 +38,23 @@ alter table booking_settings enable row level security;
 alter table appointments enable row level security;
 
 -- Policies for Booking Settings
+drop policy if exists "Org members can view booking settings" on booking_settings;
 create policy "Org members can view booking settings" on booking_settings for select using (exists (select 1 from org_members where org_id = booking_settings.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can update booking settings" on booking_settings;
 create policy "Org members can update booking settings" on booking_settings for update using (exists (select 1 from org_members where org_id = booking_settings.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can insert booking settings" on booking_settings;
 create policy "Org members can insert booking settings" on booking_settings for insert with check (exists (select 1 from org_members where org_id = booking_settings.org_id and user_id = auth.uid()));
 
 -- Policies for Appointments
+drop policy if exists "Org members can view appointments" on appointments;
 create policy "Org members can view appointments" on appointments for select using (exists (select 1 from org_members where org_id = appointments.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can insert appointments" on appointments;
 create policy "Org members can insert appointments" on appointments for insert with check (exists (select 1 from org_members where org_id = appointments.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can update appointments" on appointments;
 create policy "Org members can update appointments" on appointments for update using (exists (select 1 from org_members where org_id = appointments.org_id and user_id = auth.uid()));
 
 -- 4. Triggers
+drop trigger if exists update_booking_settings_updated_at on booking_settings;
 create trigger update_booking_settings_updated_at before update on booking_settings for each row execute procedure update_updated_at_column();
+drop trigger if exists update_appointments_updated_at on appointments;
 create trigger update_appointments_updated_at before update on appointments for each row execute procedure update_updated_at_column();

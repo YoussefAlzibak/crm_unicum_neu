@@ -35,13 +35,17 @@ alter table profiles enable row level security;
 alter table org_members enable row level security;
 
 -- Policies for Profiles
+drop policy if exists "Users can view own profile" on profiles;
 create policy "Users can view own profile" on profiles for select using (auth.uid() = id);
+drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
 
 -- Policies for Org Members
+drop policy if exists "Users can view their own memberships" on org_members;
 create policy "Users can view their own memberships" on org_members for select using (auth.uid() = user_id);
 
 -- Policies for Organizations (Access via membership)
+drop policy if exists "Members can view their organization" on organizations;
 create policy "Members can view their organization" on organizations 
   for select using (
     exists (
@@ -59,5 +63,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists update_organizations_updated_at on organizations;
 create trigger update_organizations_updated_at before update on organizations for each row execute procedure update_updated_at_column();
+drop trigger if exists update_profiles_updated_at on profiles;
 create trigger update_profiles_updated_at before update on profiles for each row execute procedure update_updated_at_column();

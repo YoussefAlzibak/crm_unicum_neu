@@ -63,6 +63,7 @@ alter table contact_activities enable row level security;
 
 -- RLS Policies (Filtered by org_member status)
 
+drop policy if exists "Org members can view contacts" on contacts;
 create policy "Org members can view contacts" on contacts
   for select using (
     exists (
@@ -71,6 +72,7 @@ create policy "Org members can view contacts" on contacts
     )
   );
 
+drop policy if exists "Org members can insert contacts" on contacts;
 create policy "Org members can insert contacts" on contacts
   for insert with check (
     exists (
@@ -79,6 +81,7 @@ create policy "Org members can insert contacts" on contacts
     )
   );
 
+drop policy if exists "Org members can update contacts" on contacts;
 create policy "Org members can update contacts" on contacts
   for update using (
     exists (
@@ -88,12 +91,17 @@ create policy "Org members can update contacts" on contacts
   );
 
 -- Pipelines
+drop policy if exists "Org members can view pipelines" on pipelines;
 create policy "Org members can view pipelines" on pipelines for select using (exists (select 1 from org_members where org_id = pipelines.org_id and user_id = auth.uid()));
 -- Stages
+drop policy if exists "Org members can view stages" on pipeline_stages;
 create policy "Org members can view stages" on pipeline_stages for select using (exists (select 1 from pipeline_stages s join pipelines p on s.pipeline_id = p.id join org_members m on p.org_id = m.org_id where m.user_id = auth.uid()));
 -- Deals
+drop policy if exists "Org members can view deals" on deals;
 create policy "Org members can view deals" on deals for select using (exists (select 1 from org_members where org_id = deals.org_id and user_id = auth.uid()));
 
 -- Triggers for updated_at
+drop trigger if exists update_contacts_updated_at on contacts;
 create trigger update_contacts_updated_at before update on contacts for each row execute procedure update_updated_at_column();
+drop trigger if exists update_deals_updated_at on deals;
 create trigger update_deals_updated_at before update on deals for each row execute procedure update_updated_at_column();

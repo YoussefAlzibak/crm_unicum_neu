@@ -80,25 +80,37 @@ alter table email_events enable row level security;
 -- Policies (Simplified for Org Members)
 
 -- Tickets
+drop policy if exists "Org members can view tickets" on tickets;
 create policy "Org members can view tickets" on tickets for select using (exists (select 1 from org_members where org_id = tickets.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can insert tickets" on tickets;
 create policy "Org members can insert tickets" on tickets for insert with check (exists (select 1 from org_members where org_id = tickets.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can update tickets" on tickets;
 create policy "Org members can update tickets" on tickets for update using (exists (select 1 from org_members where org_id = tickets.org_id and user_id = auth.uid()));
 
 -- Messages
+drop policy if exists "Org members can view messages" on ticket_messages;
 create policy "Org members can view messages" on ticket_messages for select using (exists (select 1 from tickets t join org_members m on t.org_id = m.org_id where t.id = ticket_messages.ticket_id and m.user_id = auth.uid()));
+drop policy if exists "Org members can insert messages" on ticket_messages;
 create policy "Org members can insert messages" on ticket_messages for insert with check (exists (select 1 from tickets t join org_members m on t.org_id = m.org_id where t.id = ticket_messages.ticket_id and m.user_id = auth.uid()));
 
 -- Email Templates
+drop policy if exists "Org members can view templates" on email_templates;
 create policy "Org members can view templates" on email_templates for select using (exists (select 1 from org_members where org_id = email_templates.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can insert templates" on email_templates;
 create policy "Org members can insert templates" on email_templates for insert with check (exists (select 1 from org_members where org_id = email_templates.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can update templates" on email_templates;
 create policy "Org members can update templates" on email_templates for update using (exists (select 1 from org_members where org_id = email_templates.org_id and user_id = auth.uid()));
 
 -- Email Campaigns
+drop policy if exists "Org members can view campaigns" on email_campaigns;
 create policy "Org members can view campaigns" on email_campaigns for select using (exists (select 1 from org_members where org_id = email_campaigns.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can insert campaigns" on email_campaigns;
 create policy "Org members can insert campaigns" on email_campaigns for insert with check (exists (select 1 from org_members where org_id = email_campaigns.org_id and user_id = auth.uid()));
+drop policy if exists "Org members can update campaigns" on email_campaigns;
 create policy "Org members can update campaigns" on email_campaigns for update using (exists (select 1 from org_members where org_id = email_campaigns.org_id and user_id = auth.uid()));
 
 -- Email Events
+drop policy if exists "Org members can view email events" on email_events;
 create policy "Org members can view email events" on email_events for select using (
   exists (
     select 1 from email_campaigns c 
@@ -108,6 +120,9 @@ create policy "Org members can view email events" on email_events for select usi
 );
 
 -- Triggers
+drop trigger if exists update_tickets_updated_at on tickets;
 create trigger update_tickets_updated_at before update on tickets for each row execute procedure update_updated_at_column();
+drop trigger if exists update_email_templates_updated_at on email_templates;
 create trigger update_email_templates_updated_at before update on email_templates for each row execute procedure update_updated_at_column();
+drop trigger if exists update_email_campaigns_updated_at on email_campaigns;
 create trigger update_email_campaigns_updated_at before update on email_campaigns for each row execute procedure update_updated_at_column();

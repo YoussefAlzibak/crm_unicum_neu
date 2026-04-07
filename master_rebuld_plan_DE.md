@@ -44,16 +44,16 @@ Das System ist von Grund auf so aufgebaut, dass hunderte Firmen (Organisationen)
 - **Kampagnen-Engine**: E-Mail-Templates (Drag & Drop), Kampagnen-Planer und Automatisierungs-Sequenzen (Drip-Kampagnen).
 - **Tracking**: `email_events` zur Analyse von Öffnungen, Klicks und Bounces.
 
-### Phase 6: Buchungssystem & Kalender [IN PROGRESS]
+### Phase 6: Buchungssystem & Kalender [DONE]
 - **Booking-Widget**: Öffentliche Landingpage für Termine (`/o/:slug/book`).
 - **Kalender-Sync**: Bi-direktionaler Sync mit Google Calendar via OAuth und Webhooks.
 - **Verfügbarkeit**: Intelligente Slot-Berechnung unter Berücksichtigung von Pufferzeiten und Doppelbuchungsschutz.
 
-### Phase 6: Preisrechner-Modul (Nischen-Feature)
+### Phase 7: Preisrechner-Modul (Nischen-Feature) [DONE]
 - **Konfigurator**: Dynamischer Aufbau von Rechnern für Dienstleistungen, Kategorien und komplexe Rabatt-Logiken.
 - **Lead-Capture**: Automatische Erstellung von Kontakten und Deals aus Rechner-Anfragen.
 
-### Phase 7: Plattform-Management & Monetarisierung
+### Phase 8: Plattform-Management & Monetarisierung [DONE]
 - **Billing**: Stripe Billing Integration für Abonnements (Free, Pro, Enterprise).
 - **Super-Admin Interface**: Globales Dashboard zur Verwaltung von Organisationen, Nutzern und Systemmetriken.
 - **Polish**: SEO-Optimierung (Meta-Tags, Sitemap), Image-Processing und finale Performance-Audits.

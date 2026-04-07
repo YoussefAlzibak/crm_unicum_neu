@@ -1,33 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useOrg } from '../contexts/OrgContext';
 import { Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, TrendingUp, Mail, Sparkles, Send, Calendar, Clock } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, TrendingUp, Mail, Calendar, Calculator, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ContactsView from '../components/dashboard/ContactsView';
 import PipelineView from '../components/dashboard/PipelineView';
 import MessagesView from '../components/dashboard/MessagesView';
 import CampaignsView from '../components/dashboard/CampaignsView';
 import BookingView from '../components/dashboard/BookingView';
+import CalculatorView from '../components/dashboard/CalculatorView';
+import BillingView from '../components/dashboard/BillingView';
+import SuperAdminView from '../components/dashboard/SuperAdminView';
 
-type View = 'overview' | 'contacts' | 'pipeline' | 'messages' | 'campaigns' | 'booking' | 'settings';
+type View = 'overview' | 'contacts' | 'pipeline' | 'messages' | 'campaigns' | 'booking' | 'calculators' | 'billing' | 'super-admin' | 'settings';
 
-// Help for the missing Plus icon which I used in Overview
-const Plus = ({ className, size }: { className?: string, size?: number }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size || 24} 
-    height={size || 24} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M5 12h14"/><path d="M12 5v14"/>
-  </svg>
-);
 
 const Dashboard = () => {
   const { user, profile, currentOrg, isLoading, signOut } = useOrg();
@@ -102,6 +88,9 @@ const Dashboard = () => {
       case 'messages': return <MessagesView />;
       case 'campaigns': return <CampaignsView />;
       case 'booking': return <BookingView />;
+      case 'calculators': return <CalculatorView />;
+      case 'billing': return <BillingView />;
+      case 'super-admin': return <SuperAdminView />;
       case 'overview':
       default:
         return (
@@ -151,9 +140,7 @@ const Dashboard = () => {
 
             {/* AI Assistant Quick Entry */}
             <div className="bg-gradient-to-br from-indigo-500/10 to-primary/10 p-8 rounded-3xl border border-indigo-500/20 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                <Sparkles size={120} className="text-indigo-500"/>
-              </div>
+                <span className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform text-[120px] select-none">✦</span>
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold font-orbitron mb-2">KI-Assistent</h3>
@@ -167,7 +154,7 @@ const Dashboard = () => {
                 </div>
                 <div className="w-full md:w-80 bg-black/40 p-4 rounded-2xl border border-white/10">
                   <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gray-500">
-                    <Send size={12}/> Schnellversand Kampagne
+                    <span className="text-xs">✉</span> Schnellversand Kampagne
                   </div>
                   <div className="space-y-3">
                     <div className="h-2 w-3/4 bg-white/10 rounded"></div>
@@ -210,7 +197,9 @@ const Dashboard = () => {
                 { id: 'pipeline', label: 'Pipelines', icon: TrendingUp },
                 { id: 'messages', label: 'Support & KI', icon: MessageSquare },
                 { id: 'booking', label: 'Terminkalender', icon: Calendar },
+                { id: 'calculators', label: 'Preisrechner', icon: Calculator },
                 { id: 'campaigns', label: 'Marketing', icon: Mail },
+                { id: 'billing', label: 'Abrechnung', icon: CreditCard },
                 { id: 'settings', label: 'Einstellungen', icon: Settings },
               ].map((item) => (
                 <button 
