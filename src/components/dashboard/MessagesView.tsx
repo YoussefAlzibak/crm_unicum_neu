@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
-import { MessageSquare, Send, Bot, User, Clock, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { MessageSquare, Send, Bot, User, Clock, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Ticket {
@@ -28,6 +28,7 @@ const MessagesView = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentOrg) fetchTickets();
@@ -62,7 +63,7 @@ const MessagesView = () => {
   const sendMessage = async (content: string, type: 'user' | 'ai' = 'user') => {
     if (!selectedTicket || !content.trim()) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('ticket_messages')
       .insert({
         ticket_id: selectedTicket.id,
@@ -84,13 +85,12 @@ const MessagesView = () => {
     setAiGenerating(true);
 
     try {
-      const lastMessage = messages[messages.length - 1].content;
       const history = messages.map(m => ({
         role: m.sender_type === 'contact' ? 'user' : 'model',
         parts: [{ text: m.content }]
       }));
 
-      const { data, error } = await supabase.functions.invoke('gemini-chat', {
+      const { data } = await supabase.functions.invoke('gemini-chat', {
         body: { 
           prompt: `Basierend auf dem Chat-Verlauf, schlagen Sie eine professionelle Antwort vor. Kontext: Support-Ticket zum Thema "${selectedTicket.subject}".`,
           history 
@@ -98,7 +98,7 @@ const MessagesView = () => {
       });
 
       if (data?.response) {
-        setNewMessage(data.response);
+        setAiSuggestion(data.response);
       }
     } catch (err) {
       console.error("AI Error:", err);
@@ -196,16 +196,46 @@ const MessagesView = () => {
               </AnimatePresence>
             </div>
 
-            {/* Input */}
+            {/* Input & AI Suggestions */}
             <div className="p-6 bg-white/[0.02] border-t border-white/10 space-y-4">
+              <AnimatePresence>
+                {aiSuggestion && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 space-y-3 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <Bot size={40} className="text-indigo-400 -mr-4 -mt-4 rotate-12" />
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                        <Sparkles size={12} /> KI-Antwortvorschlag
+                      </div>
+                      <p className="text-sm text-indigo-100/80 leading-relaxed italic">"{aiSuggestion}"</p>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => { setNewMessage(aiSuggestion); setAiSuggestion(null); }}
+                          className="px-3 py-1.5 bg-indigo-500 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-600 transition-all"
+                        >
+                          Übernehmen
+                        </button>
+                        <button 
+                          onClick={() => setAiSuggestion(null)}
+                          className="px-3 py-1.5 bg-white/5 text-gray-400 text-[10px] font-bold rounded-lg hover:bg-white/10 transition-all"
+                        >
+                          Ignorieren
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex gap-4">
                 <button 
                   onClick={generateAiReply}
                   disabled={aiGenerating || messages.length === 0}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-xl text-xs font-bold border border-indigo-500/20 transition-all disabled:opacity-50"
                 >
-                  {aiGenerating ? <Clock className="animate-spin" size={14}/> : <Sparkles size={14}/>}
-                  AI Antwort generieren
+                  {aiGenerating ? <Loader2 className="animate-spin" size={14}/> : <Sparkles size={14}/>}
+                  Antwort vorschlagen
                 </button>
               </div>
               <div className="relative">

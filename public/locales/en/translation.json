@@ -84,6 +84,33 @@
       "title": "Phone"
     }
   },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "No hidden fees. Find the perfect package for your growth.",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "feat1": "Up to 50 contacts",
+        "feat2": "500 emails/month",
+        "feat3": "Standard Support",
+        "cta": "Start for Free"
+      },
+      "pro": {
+        "name": "Pro",
+        "feat1": "Unlimited contacts",
+        "feat2": "10,000 emails/month",
+        "feat3": "Premium Support",
+        "cta": "Choose Pro"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "feat1": "Customized solution",
+        "feat2": "Unlimited emails",
+        "feat3": "24/7 Priority Support",
+        "cta": "Contact Us"
+      }
+    }
+  },
   "footer": {
     "description": "We help companies become successful online with unique web design & smart systems.",
     "legal": {

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
-import { CreditCard, Check, Zap, Crown, Shield, FileText, ArrowRight, Wallet, Loader2 } from 'lucide-react';
+import { CreditCard, Check, Zap, Crown, Shield, FileText, ArrowRight, Loader2, Users, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePlanLimits } from '../../hooks/usePlanLimits';
 
 interface Subscription {
   id?: string;
@@ -47,6 +48,7 @@ const PLANS = [
 
 const BillingView = () => {
   const { currentOrg } = useOrg();
+  const { usage, limits, refreshUsage } = usePlanLimits();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   
   
@@ -75,20 +77,27 @@ const BillingView = () => {
     setCheckoutStep(0);
     
     // Simulate checkout flow
-    setTimeout(() => setCheckoutStep(1), 1500); // init -> processing
+    setTimeout(() => setCheckoutStep(1), 1500); 
     setTimeout(async () => {
       // Create/Update in DB
       if (subscription?.id) {
-        await supabase.from('subscriptions').update({ plan_name: plan.name }).eq('id', subscription.id);
+        await supabase.from('subscriptions').update({ 
+          plan_name: plan.name,
+          updated_at: new Date().toISOString()
+        }).eq('id', subscription.id);
       } else {
-        await supabase.from('subscriptions').insert({ org_id: currentOrg.id, plan_name: plan.name });
+        await supabase.from('subscriptions').insert({ 
+          org_id: currentOrg.id, 
+          plan_name: plan.name 
+        });
       }
-      await fetchSubscription();
-      setCheckoutStep(2); // processing -> success
       
-      // Auto close after success
+      await fetchSubscription();
+      await refreshUsage();
+      
+      setCheckoutStep(2); 
       setTimeout(() => setCheckoutPlan(null), 2500);
-    }, 4500);
+    }, 4000);
   };
 
   return (
@@ -98,13 +107,28 @@ const BillingView = () => {
           <h2 className="text-3xl font-bold font-orbitron">Abonnement & Abrechnung</h2>
           <p className="text-sm text-gray-500">Verwalten Sie Ihre Pläne und Zahlungsmethoden.</p>
         </div>
-        <div className="p-4 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-4 shadow-lg">
-          <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-            <Wallet size={20} />
+        <div className="flex items-center gap-4">
+          <div className="glass p-4 rounded-2xl border border-white/10 flex items-center gap-4 shadow-lg">
+            <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Kontakte</p>
+              <p className="font-orbitron font-bold">
+                {usage?.contact_count || 0} / {limits.contacts >= 100000 ? '∞' : limits.contacts}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] text-gray-500 uppercase font-bold">Aktuelles Guthaben</p>
-            <p className="font-orbitron font-bold">€0.00</p>
+          <div className="glass p-4 rounded-2xl border border-white/10 flex items-center gap-4 shadow-lg">
+            <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
+              <Mail size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Mails (30tg)</p>
+              <p className="font-orbitron font-bold">
+                {usage?.emails_sent_30d || 0} / {limits.emails_per_month >= 100000 ? '∞' : limits.emails_per_month}
+              </p>
+            </div>
           </div>
         </div>
       </div>

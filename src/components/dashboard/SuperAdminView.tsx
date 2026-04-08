@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
-import { ShieldCheck, Users, Building, Activity, Database, Server, Terminal, Lock } from 'lucide-react';
+import { ShieldCheck, Users, Building, Activity, Database, Terminal, Lock, Search } from 'lucide-react';
 
 interface AuditLog {
   id: string;
@@ -14,8 +14,9 @@ interface AuditLog {
 const SuperAdminView = () => {
   const { profile } = useOrg();
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [stats, setStats] = useState({ totalOrgs: 0, totalUsers: 0, activeSubs: 0 });
+  const [stats, setStats] = useState({ totalOrgs: 0, totalUsers: 0, activeSubs: 0, totalEvents: 0 });
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (profile?.is_super_admin) {
@@ -28,11 +29,13 @@ const SuperAdminView = () => {
     const { count: orgCount } = await supabase.from('organizations').select('*', { count: 'exact', head: true });
     const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
     const { count: subCount } = await supabase.from('subscriptions').select('*', { count: 'exact', head: true }).neq('plan_name', 'free');
+    const { count: eventCount } = await supabase.from('email_events').select('*', { count: 'exact', head: true });
 
     setStats({
       totalOrgs: orgCount || 0,
       totalUsers: userCount || 0,
-      activeSubs: subCount || 0
+      activeSubs: subCount || 0,
+      totalEvents: eventCount || 0
     });
   };
 
@@ -75,7 +78,7 @@ const SuperAdminView = () => {
           { label: 'Organisationen', value: stats.totalOrgs, icon: Building, color: 'text-blue-400' },
           { label: 'Benutzer Gesamt', value: stats.totalUsers, icon: Users, color: 'text-purple-400' },
           { label: 'Bezahlte Abos', value: stats.activeSubs, icon: Activity, color: 'text-green-400' },
-          { label: 'System Last', value: '4.2%', icon: Server, color: 'text-orange-400' }
+          { label: 'E-Mail Events', value: stats.totalEvents, icon: MailIcon, color: 'text-orange-400' }
         ].map((stat, i) => (
           <div key={i} className="glass p-6 rounded-3xl border border-white/10 hover:border-white/20 transition-all">
             <div className="flex items-center justify-between mb-4">
@@ -90,16 +93,36 @@ const SuperAdminView = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 glass rounded-3xl border border-white/10 overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-            <h3 className="font-bold flex items-center gap-2"><Terminal size={18} className="text-primary"/> Globaler Audit-Log</h3>
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live Updates</span>
+          <div className="p-6 border-b border-white/10 space-y-4 bg-white/[0.02]">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold flex items-center gap-2"><Terminal size={18} className="text-primary"/> Globaler Audit-Log</h3>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live Updates</span>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+              <input 
+                type="text"
+                placeholder="Logs durchsuchen (Tabelle, Aktion, Org ID)..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary outline-none transition-all"
+              />
+            </div>
           </div>
           <div className="divide-y divide-white/5">
             {loading ? (
               Array(5).fill(0).map((_, i) => <div key={i} className="h-16 animate-pulse bg-white/5 m-4 rounded" />)
-            ) : logs.length === 0 ? (
-              <p className="p-10 text-center text-gray-600 text-sm italic">Keine aktuellen Systemereignisse gefunden.</p>
-            ) : logs.map((log) => (
+            ) : logs.filter(l => 
+                l.action.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                l.target_table.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.org_id.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length === 0 ? (
+              <p className="p-10 text-center text-gray-600 text-sm italic">Keine passenden Audit-Logs gefunden.</p>
+            ) : logs.filter(l => 
+                l.action.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                l.target_table.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.org_id.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map((log) => (
               <div key={log.id} className="p-4 hover:bg-white/5 transition-all flex items-center justify-between group">
                 <div className="flex items-center gap-4">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold ${
@@ -186,6 +209,23 @@ const Zap = ({ className, size }: { className?: string, size?: number }) => (
     className={className}
   >
     <path d="M13 2 L3 14 L12 14 L11 22 L21 10 L12 10 L13 2 Z"/>
+  </svg>
+);
+
+const MailIcon = ({ className, size }: { className?: string, size?: number }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size || 24} 
+    height={size || 24} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
   </svg>
 );
 

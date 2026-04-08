@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
 import { Search, UserPlus, Filter, Mail, Phone, Tag, Edit2, Trash2, X, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePlanLimits } from '../../hooks/usePlanLimits';
 
 interface Contact {
   id: string;
@@ -15,6 +16,7 @@ interface Contact {
 
 const ContactsView = () => {
   const { currentOrg } = useOrg();
+  const { checkActionAllowed, refreshUsage } = usePlanLimits();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,11 +73,17 @@ const ContactsView = () => {
     if (isEdit) {
       await supabase.from('contacts').update(payload).eq('id', contactModal.contact!.id);
     } else {
+      const { allowed, message } = checkActionAllowed('contacts');
+      if (!allowed) {
+        alert(message);
+        return;
+      }
       await supabase.from('contacts').insert({ ...payload, org_id: currentOrg.id });
     }
 
     setContactModal({ open: false, contact: null });
     await fetchContacts();
+    await refreshUsage();
   };
 
   const deleteContact = async (id: string) => {

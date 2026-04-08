@@ -2,11 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useOrg } from '../../contexts/OrgContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Plus, MoreVertical, DollarSign, User, X, Save, Trash2,
-  TrendingUp, Target, BarChart3, ArrowRight, Settings,
-  ChevronRight, Phone, Mail, Edit2, GripVertical
+import { Plus, MoreVertical, DollarSign, User, X, Save, Trash2,
+  TrendingUp, Target, BarChart3, Settings,
+  ChevronRight, Edit2, GripVertical
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Pipeline {
@@ -296,42 +296,65 @@ const PipelineView = () => {
   // ── Pipeline Setup ──────────────────────────────────────────────────────────
   const handleSetup = async (pipelineName: string, stageNames: string[]) => {
     if (!currentOrg) return;
-    let pipId = pipeline?.id;
+    try {
+      let pipId = pipeline?.id;
 
-    if (!pipId) {
-      const { data: p } = await supabase.from('pipelines').insert({ org_id: currentOrg.id, name: pipelineName }).select().single();
-      if (p) pipId = p.id;
-    } else {
-      await supabase.from('pipelines').update({ name: pipelineName }).eq('id', pipId);
-      await supabase.from('pipeline_stages').delete().eq('pipeline_id', pipId);
+      if (!pipId) {
+        const { data: p, error } = await supabase.from('pipelines').insert({ org_id: currentOrg.id, name: pipelineName }).select().single();
+        if (error) throw error;
+        if (p) pipId = p.id;
+      } else {
+        const { error: pErr } = await supabase.from('pipelines').update({ name: pipelineName }).eq('id', pipId);
+        if (pErr) throw pErr;
+        const { error: sErr } = await supabase.from('pipeline_stages').delete().eq('pipeline_id', pipId);
+        if (sErr) throw sErr;
+      }
+
+      if (!pipId) return;
+      const { error: iErr } = await supabase.from('pipeline_stages').insert(
+        stageNames.map((name, i) => ({ pipeline_id: pipId!, name, order_index: i }))
+      );
+      if (iErr) throw iErr;
+
+      setSetupModal(false);
+      await loadAll();
+      toast.success('Pipeline erfolgreich konfiguriert');
+    } catch (error: any) {
+      console.error('Error setup pipeline:', error);
+      toast.error('Fehler beim Konfigurieren: ' + error.message);
     }
-
-    if (!pipId) return;
-    await supabase.from('pipeline_stages').insert(
-      stageNames.map((name, i) => ({ pipeline_id: pipId, name, order_index: i }))
-    );
-
-    setSetupModal(false);
-    await loadAll();
   };
 
   // ── Deal CRUD ───────────────────────────────────────────────────────────────
   const saveDeal = async (data: Partial<Deal>) => {
     if (!currentOrg) return;
-    const payload = { title: data.title!, value: data.value || 0, currency: data.currency || 'EUR', stage_id: data.stage_id!, contact_id: data.contact_id || null };
+    try {
+      const payload = { title: data.title!, value: data.value || 0, currency: data.currency || 'EUR', stage_id: data.stage_id!, contact_id: data.contact_id || null };
 
-    if (dealModal.deal?.id) {
-      await supabase.from('deals').update(payload).eq('id', dealModal.deal.id);
-    } else {
-      await supabase.from('deals').insert({ ...payload, org_id: currentOrg.id });
+      if (dealModal.deal?.id) {
+        const { error } = await supabase.from('deals').update(payload).eq('id', dealModal.deal.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('deals').insert({ ...payload, org_id: currentOrg.id });
+        if (error) throw error;
+      }
+      setDealModal({ deal: null, open: false });
+      await loadAll();
+      toast.success('Deal erfolgreich gespeichert');
+    } catch (error: any) {
+      toast.error('Fehler beim Speichern: ' + error.message);
     }
-    setDealModal({ deal: null, open: false });
-    await loadAll();
   };
 
   const deleteDeal = async (id: string) => {
-    await supabase.from('deals').delete().eq('id', id);
-    setDeals(d => d.filter(x => x.id !== id));
+    try {
+      const { error } = await supabase.from('deals').delete().eq('id', id);
+      if (error) throw error;
+      setDeals(d => d.filter(x => x.id !== id));
+      toast.success('Deal gelöscht');
+    } catch (error: any) {
+      toast.error('Fehler beim Löschen: ' + error.message);
+    }
   };
 
   // ── Drag and Drop ───────────────────────────────────────────────────────────
@@ -344,10 +367,18 @@ const PipelineView = () => {
     e.preventDefault();
     const id = draggingDealId.current;
     if (!id || id === stageId) { setDragOverStage(null); return; }
-    setDeals(prev => prev.map(d => d.id === id ? { ...d, stage_id: stageId } : d));
-    await supabase.from('deals').update({ stage_id: stageId }).eq('id', id);
-    draggingDealId.current = null;
-    setDragOverStage(null);
+    
+    try {
+      setDeals(prev => prev.map(d => d.id === id ? { ...d, stage_id: stageId } : d));
+      const { error } = await supabase.from('deals').update({ stage_id: stageId }).eq('id', id);
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error('Verschieben fehlgeschlagen: ' + error.message);
+      await loadAll(); // Revert local state
+    } finally {
+      draggingDealId.current = null;
+      setDragOverStage(null);
+    }
   };
 
   // ── Analytics ───────────────────────────────────────────────────────────────

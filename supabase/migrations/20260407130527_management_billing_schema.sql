@@ -56,10 +56,28 @@ create policy "Super admins can view all audit logs" on audit_logs
 -- 5. Helper Function for Audit Logging (Trigger usage)
 create or replace function log_action()
 returns trigger as $$
+declare
+  v_org_id uuid;
 begin
+    -- Check if org_id column exists on the table
+    begin
+        if TG_OP = 'DELETE' then
+            v_org_id := OLD.org_id;
+        else
+            v_org_id := NEW.org_id;
+        end if;
+    exception when undefined_column then
+        -- Fallback for tables without org_id (profiles, organizations)
+        if TG_TABLE_NAME = 'organizations' then
+            v_org_id := case when TG_OP = 'DELETE' then OLD.id else NEW.id end;
+        else
+            v_org_id := null;
+        end if;
+    end;
+
     insert into audit_logs (org_id, user_id, action, target_table, target_id)
     values (
-      case when TG_OP = 'DELETE' then OLD.org_id else NEW.org_id end,
+      v_org_id,
       auth.uid(),
       TG_OP,
       TG_TABLE_NAME,

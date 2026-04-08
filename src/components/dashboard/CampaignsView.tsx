@@ -5,7 +5,7 @@ import {
   Mail, Send, Calendar, Plus, Eye, Trash2, Edit3, BarChart3,
   ArrowLeft, ArrowRight, Save, Users, Clock, CheckCircle,
   TrendingUp, MousePointer, AlertTriangle, X, Bold, Italic,
-  AlignLeft, Image as ImageIcon, Type, Layers
+  AlignLeft, Image as ImageIcon, Type, Layers, Sparkles, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,11 +25,6 @@ interface Template {
   name: string;
   subject: string;
   html_body: string;
-}
-
-interface EmailEvent {
-  event_type: string;
-  count?: number;
 }
 
 interface CampaignStats {
@@ -122,12 +117,51 @@ const STARTER_TEMPLATES = [
 <div style="text-align:center;padding:24px;border-top:1px solid #222;color:#444;font-size:12px">© 2024 {{company_name}}</div>
 </div>`,
   },
+  {
+    name: 'Rezension anfordern',
+    subject: 'Wie war Ihre Erfahrung mit {{company_name}}? ⭐',
+    html_body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#ffffff;color:#1a1a1a;border-radius:24px;overflow:hidden;border:1px solid #e5e7eb">
+<div style="padding:40px 32px;text-align:center">
+  <div style="width:64px;height:64px;background:#fef3c7;border-radius:20px;display:inline-flex;align-items:center;justify-center;margin-bottom:24px">
+    <span style="font-size:32px">⭐</span>
+  </div>
+  <h1 style="margin:0;font-size:24px;font-weight:800;color:#111827">Ihre Meinung zählt!</h1>
+  <p style="margin:12px 0 0;color:#4b5563;line-height:1.6">Hallo {{first_name}}, wir hoffen, Sie waren mit unserem Service zufrieden. Würden Sie uns kurz Feedback geben?</p>
+  <div style="margin:32px 0">
+    <p style="font-size:20px;margin-bottom:20px">⭐⭐⭐⭐⭐</p>
+    <a href="{{review_url}}" style="background:#111827;color:#fff;padding:18px 36px;border-radius:14px;text-decoration:none;font-weight:700;display:inline-block;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)">Bewertung abgeben</a>
+  </div>
+  <p style="font-size:12px;color:#9ca3af">Es dauert weniger als eine Minute.</p>
+</div>
+</div>`,
+  },
+  {
+    name: 'Terminbestätigung',
+    subject: 'Bestätigt: Ihr Termin am {{appointment_date}} ✅',
+    html_body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#f9fafb;color:#1f2937;border-radius:20px;overflow:hidden;border:1px solid #e5e7eb">
+<div style="background:#4f46e5;padding:32px;text-align:center;color:#ffffff">
+  <h2 style="margin:0">Termin bestätigt</h2>
+</div>
+<div style="padding:40px 32px">
+  <p>Hallo {{first_name}},</p>
+  <p>hiermit bestätigen wir Ihren gebuchten Termin:</p>
+  <div style="background:#ffffff;padding:24px;border-radius:16px;border:1px solid #e5e7eb;margin:24px 0">
+    <div style="margin-bottom:12px"><strong>📅 Datum:</strong> {{appointment_date}}</div>
+    <div><strong>📍 Ort:</strong> {{appointment_location}}</div>
+  </div>
+  <p style="font-size:14px;color:#6b7280">Sollten Sie verhindert sein, geben Sie uns bitte rechtzeitig Bescheid.</p>
+  <div style="text-align:center;margin-top:32px">
+    <a href="{{calendar_url}}" style="color:#4f46e5;font-weight:700;text-decoration:none">In Kalender eintragen →</a>
+  </div>
+</div>
+</div>`,
+  },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const CampaignsView = () => {
   const { currentOrg } = useOrg();
-  const [view, setView] = useState<'list' | 'editor' | 'stats' | 'templates'>('list');
+  const [view, setView] = useState<'list' | 'editor' | 'templates' | 'stats'>('list');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,6 +180,11 @@ const CampaignsView = () => {
     audience_filter: {} as Record<string, any>,
   });
   const [previewMode, setPreviewMode] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [loadingStarter, setLoadingStarter] = useState<number | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Global stats
   const [globalStats, setGlobalStats] = useState({ totalSent: 0, avgOpen: 0, avgClick: 0, bounces: 0 });
@@ -187,11 +226,15 @@ const CampaignsView = () => {
   };
 
   const fetchCampaignStats = async (campaignId: string) => {
-    const { data } = await supabase.from('email_events').select('event_type').eq('campaign_id', campaignId);
-    if (!data) return;
-    const counts: Record<string, number> = {};
-    data.forEach(e => { counts[e.event_type] = (counts[e.event_type] || 0) + 1; });
-    setCampaignStats({ sent: counts['sent'] || 0, opened: counts['opened'] || 0, clicked: counts['clicked'] || 0, bounced: counts['bounced'] || 0 });
+    const { data } = await supabase.from('campaign_stats').select('*').eq('campaign_id', campaignId).single();
+    if (data) {
+      setCampaignStats({ 
+        sent: data.sent_count, 
+        opened: data.open_count, 
+        clicked: data.click_count, 
+        bounced: 0 
+      });
+    }
   };
 
   const openEditor = (campaign?: Campaign) => {
@@ -207,10 +250,41 @@ const CampaignsView = () => {
     setView('editor');
   };
 
-  const openStats = async (campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    await fetchCampaignStats(campaign.id);
-    setView('stats');
+  const generateAiTemplate = async () => {
+    if (!aiPrompt.trim()) return;
+    setAiGenerating(true);
+    try {
+      const { data } = await supabase.functions.invoke('gemini-chat', {
+        body: {
+          prompt: `Erstellen Sie eine professionelle E-Mail-Vorlage basierend auf dieser Beschreibung: "${aiPrompt}". 
+          Geben Sie die Antwort im JSON-Format zurück: { "subject": "...", "html": "..." }. 
+          Verwenden Sie modernes HTML mit Inline-CSS und Platzhaltern wie {{first_name}}.`,
+        }
+      });
+
+      if (data?.response) {
+        // Simple extraction if not perfect JSON
+        let content = data.response;
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setDraft(d => ({ ...d, subject: parsed.subject, html_body: parsed.html }));
+            setShowAiModal(false);
+            setAiPrompt('');
+            setEditorStep(1);
+          }
+        } catch (e) {
+          // Fallback: load whole response as body
+          setDraft(d => ({ ...d, html_body: content }));
+          setShowAiModal(false);
+        }
+      }
+    } catch (err) {
+      console.error("AI Error:", err);
+    } finally {
+      setAiGenerating(false);
+    }
   };
 
   const saveCampaign = async (status: 'draft' | 'scheduled' = 'draft') => {
@@ -286,11 +360,35 @@ const CampaignsView = () => {
     setCampaigns(c => c.filter(x => x.id !== id));
   };
 
-  const loadStarterTemplate = async (tpl: typeof STARTER_TEMPLATES[0]) => {
+  const showStats = async (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setView('stats');
+    setLoading(true);
+    await fetchCampaignStats(campaign.id);
+    setLoading(false);
+  };
+
+  const loadStarterTemplate = async (tpl: typeof STARTER_TEMPLATES[0], index: number) => {
     if (!currentOrg) return;
-    const { data } = await supabase.from('email_templates').insert({ org_id: currentOrg.id, name: tpl.name, subject: tpl.subject, html_body: tpl.html_body }).select().single();
-    if (data) { await fetchTemplates(); }
-    setView('list');
+    setLoadingStarter(index);
+    try {
+      const { data } = await supabase.from('email_templates').insert({ 
+        org_id: currentOrg.id, 
+        name: tpl.name, 
+        subject: tpl.subject, 
+        html_body: tpl.html_body 
+      }).select().single();
+      
+      if (data) { 
+        await fetchTemplates(); 
+        setSuccessMsg(`Vorlage "${tpl.name}" wurde unter "Meine Vorlagen" gespeichert!`);
+        setTimeout(() => setSuccessMsg(null), 3000);
+      }
+    } catch (err) {
+      console.error("Error saving template:", err);
+    } finally {
+      setLoadingStarter(null);
+    }
   };
 
   const applyTemplate = (tpl: Template) => {
@@ -327,6 +425,11 @@ const CampaignsView = () => {
                 <Plus size={18} /> Neue Kampagne
               </button>
             </>
+          )}
+          {view === 'templates' && (
+            <button onClick={() => setShowAiModal(true)} className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-indigo-500/20">
+              <Sparkles size={18} /> KI-Vorlage generieren
+            </button>
           )}
         </div>
       </div>
@@ -385,22 +488,10 @@ const CampaignsView = () => {
                       <h3 className="text-lg font-bold group-hover:text-primary transition-colors truncate mb-1">{campaign.name}</h3>
                       <p className="text-xs text-gray-500 flex items-center gap-1.5">
                         <Calendar size={11} />
-                        {campaign.scheduled_for ? new Date(campaign.scheduled_for).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Nicht geplant'}
+                        {campaign.scheduled_for ? new Date(campaign.scheduled_for).toLocaleString('de-DE') : 'Nicht geplant'}
                       </p>
                     </div>
-                    <div className="pt-4 border-t border-white/5 grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Gesendet', val: '—' },
-                        { label: 'Geöffnet', val: '—' },
-                        { label: 'Geklickt', val: '—' },
-                      ].map((m, i) => (
-                        <div key={i} className="text-center">
-                          <p className="text-[10px] text-gray-600 uppercase font-bold mb-1">{m.label}</p>
-                          <p className="font-orbitron font-bold text-sm">{m.val}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => openStats(campaign)} className="w-full py-2.5 bg-white/5 hover:bg-white/10 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                    <button onClick={() => showStats(campaign)} className="w-full py-2.5 bg-white/5 hover:bg-white/10 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2">
                       <BarChart3 size={13} /> Statistiken ansehen
                     </button>
                   </motion.div>
@@ -448,15 +539,37 @@ const CampaignsView = () => {
                       <h4 className="font-bold text-lg group-hover:text-indigo-400 transition-colors">{tpl.name}</h4>
                       <p className="text-xs text-gray-500 mt-1 leading-relaxed">{tpl.subject}</p>
                     </div>
-                    <button onClick={() => loadStarterTemplate(tpl)} className="w-full py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-sm font-bold rounded-2xl border border-indigo-500/20 transition-all">
-                      Als Vorlage speichern
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => { setDraft(d => ({ ...d, name: tpl.name, subject: tpl.subject, html_body: tpl.html_body })); setView('editor'); setEditorStep(1); }} 
+                        className="flex-[2] py-3 bg-indigo-500 text-white text-sm font-bold rounded-2xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20"
+                      >
+                        Direkt verwenden
+                      </button>
+                      <button 
+                        onClick={() => loadStarterTemplate(tpl, i)} 
+                        disabled={loadingStarter === i}
+                        className="flex-1 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold rounded-2xl border border-indigo-500/20 transition-all flex items-center justify-center"
+                      >
+                        {loadingStarter === i ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </div>
             </div>
           </motion.div>
         )}
+
+        <AnimatePresence>
+          {successMsg && (
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-green-500 text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-2"
+            >
+              <CheckCircle size={18} /> {successMsg}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ══════════════════ STATS ══════════════════ */}
         {view === 'stats' && selectedCampaign && (
@@ -641,8 +754,33 @@ const CampaignsView = () => {
                       <div className="pt-2">
                         <p className="text-[10px] text-gray-600 uppercase font-bold mb-2">Formatierung</p>
                         <div className="flex gap-1 flex-wrap">
-                          {[Bold, Italic, AlignLeft, ImageIcon].map((Icon, i) => (
-                            <button key={i} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 text-gray-400 hover:text-white transition-all"><Icon size={14} /></button>
+                          {[
+                            { Icon: Bold, label: 'Fett' },
+                            { Icon: Italic, label: 'Kursiv' },
+                            { Icon: AlignLeft, label: 'Links' },
+                            { Icon: ImageIcon, label: 'Bild' }
+                          ].map((btn, i) => (
+                            <button key={i} title={btn.label} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 text-gray-400 hover:text-white transition-all"><btn.Icon size={14} /></button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="pt-2">
+                        <p className="text-[10px] text-gray-600 uppercase font-bold mb-2">Variablen einfügen</p>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {[
+                            { tag: '{{first_name}}', label: 'Vorname' },
+                            { tag: '{{company_name}}', label: 'Unternehmen' },
+                            { tag: '{{cta_url}}', label: 'Button-Link' },
+                            { tag: '{{unsubscribe_url}}', label: 'Abmelden' }
+                          ].map(v => (
+                            <button 
+                              key={v.tag} 
+                              onClick={() => setDraft(d => ({ ...d, html_body: d.html_body + v.tag }))}
+                              className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-gray-400 hover:text-primary transition-all flex items-center justify-between"
+                            >
+                              <span>{v.label}</span>
+                              <code className="text-[9px] text-primary/60">{v.tag}</code>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -736,6 +874,124 @@ const CampaignsView = () => {
           </motion.div>
         )}
 
+        {/* ══════════════════ STATS ══════════════════ */}
+        {view === 'stats' && selectedCampaign && (
+          <motion.div key="stats" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+              {[
+                { label: 'Gesendet', value: campaignStats.sent, icon: Send, color: 'text-blue-400', bg: 'from-blue-500/10' },
+                { label: 'Öffnungsrate', value: `${pct(campaignStats.opened, campaignStats.sent)}%`, sub: `${campaignStats.opened} E-Mails`, icon: Eye, color: 'text-green-400', bg: 'from-green-500/10' },
+                { label: 'Klickrate', value: `${pct(campaignStats.clicked, campaignStats.sent)}%`, sub: `${campaignStats.clicked} Klicks`, icon: MousePointer, color: 'text-purple-400', bg: 'from-purple-500/10' },
+                { label: 'Bounces', value: campaignStats.bounced, icon: AlertTriangle, color: 'text-red-400', bg: 'from-red-500/10' },
+              ].map((s, i) => (
+                <div key={i} className={`glass p-6 rounded-3xl border border-white/10 bg-gradient-to-br ${s.bg} to-transparent space-y-3`}>
+                  <s.icon className={s.color} size={22} />
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">{s.label}</p>
+                    <p className="text-3xl font-bold font-orbitron mt-1">{s.value}</p>
+                    {s.sub && <p className="text-xs text-gray-600 mt-0.5">{s.sub}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="glass p-8 rounded-3xl border border-white/10">
+              <h3 className="text-lg font-bold font-orbitron mb-8 flex items-center gap-2"><TrendingUp className="text-primary" size={20} /> Kampagnen-Funnel</h3>
+              {[
+                { label: 'Versendet', value: campaignStats.sent, total: campaignStats.sent, color: 'bg-blue-500' },
+                { label: 'Geöffnet', value: campaignStats.opened, total: campaignStats.sent, color: 'bg-green-500' },
+                { label: 'Geklickt', value: campaignStats.clicked, total: campaignStats.sent, color: 'bg-purple-500' },
+              ].map((bar, i) => (
+                <div key={i} className="mb-5">
+                  <div className="flex justify-between text-xs font-bold mb-2">
+                    <span className="text-gray-400">{bar.label}</span>
+                    <span className="text-white">{bar.value} ({pct(bar.value, bar.total)}%)</span>
+                  </div>
+                  <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct(bar.value, bar.total)}%` }}
+                      transition={{ duration: 1, delay: i * 0.2 }}
+                      className={`h-full ${bar.color} shadow-lg`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="glass p-6 rounded-3xl border border-white/10 grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</p>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_STYLES[selectedCampaign.status]}`}>{STATUS_LABELS[selectedCampaign.status]}</span>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Erstellt</p>
+                <p className="text-sm font-bold">{new Date(selectedCampaign.created_at).toLocaleDateString('de-DE')}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Geplant für</p>
+                <p className="text-sm font-bold">{selectedCampaign.scheduled_for ? new Date(selectedCampaign.scheduled_for).toLocaleString('de-DE') : '—'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Bounce-Rate</p>
+                <p className="text-sm font-bold">{pct(campaignStats.bounced, campaignStats.sent)}%</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Generator Modal */}
+      <AnimatePresence>
+        {showAiModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            onClick={(e) => e.target === e.currentTarget && setShowAiModal(false)}
+          >
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-zinc-950 border border-indigo-500/30 rounded-[32px] p-8 w-full max-w-xl shadow-[0_0_50px_rgba(99,102,241,0.2)]"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/30">
+                    <Sparkles size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold font-orbitron">KI-Vorlagen Generator</h3>
+                    <p className="text-sm text-gray-500">Beschreiben Sie Ihre E-Mail, Gemini erledigt den Rest.</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowAiModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-gray-400 transition-all"><X size={20} /></button>
+              </div>
+
+              <div className="space-y-4">
+                <textarea 
+                  value={aiPrompt}
+                  onChange={e => setAiPrompt(e.target.value)}
+                  placeholder="z.B. Eine professionelle Dankeschön-E-Mail nach einem Beratungsgespräch mit einem Button für den nächsten Termin..."
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 min-h-[160px] focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm leading-relaxed"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {['Modern', 'Minimalistisch', 'Dringlich', 'Freundlich'].map(tag => (
+                    <button key={tag} onClick={() => setAiPrompt(p => p + ` Stil: ${tag}.`)} className="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-full text-[10px] font-bold text-gray-500 hover:text-indigo-400 border border-white/10 transition-all">+{tag}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <button onClick={() => setShowAiModal(false)} className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition-all">Abbrechen</button>
+                <button 
+                  onClick={generateAiTemplate}
+                  disabled={aiGenerating || !aiPrompt.trim()}
+                  className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-50"
+                >
+                  {aiGenerating ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+                  {aiGenerating ? 'KI generiert...' : 'Vorlage generieren'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

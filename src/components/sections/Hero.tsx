@@ -10,18 +10,12 @@ const Hero = () => {
       {/* Video Overlay */}
       <div className="absolute inset-0 bg-black/60 z-10 backdrop-blur-[2px]"></div>
       
-      {/* Background Video */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        poster="/img/poster.png"
-        className="absolute inset-0 w-full h-full object-cover"
-      >
-        <source src="https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-screens-1725-large.mp4" type="video/mp4" />
-        <track kind="captions" />
-      </video>
+      {/* Background Image */}
+      <img
+        src="/img/hero_bg.png"
+        alt="Futuristic Tech Background"
+        className="absolute inset-0 w-full h-full object-cover opacity-60"
+      />
 
       <div className="container mx-auto px-4 relative z-20 text-center">
         <motion.div

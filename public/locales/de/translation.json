@@ -84,6 +84,33 @@
       "title": "Telefon"
     }
   },
+  "pricing": {
+    "title": "Wählen Sie Ihren Plan",
+    "subtitle": "Keine versteckten Gebühren. Finden Sie das perfekte Paket für Ihr Wachstum.",
+    "plans": {
+      "free": {
+        "name": "Gratis",
+        "feat1": "Bis zu 50 Kontakte",
+        "feat2": "500 E-Mails/Monat",
+        "feat3": "Standard Support",
+        "cta": "Kostenlos starten"
+      },
+      "pro": {
+        "name": "Pro",
+        "feat1": "Unbegrenzte Kontakte",
+        "feat2": "10.000 E-Mails/Monat",
+        "feat3": "Premium Support",
+        "cta": "Pro Plan wählen"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "feat1": "Maßgeschneiderte Lösung",
+        "feat2": "Unbegrenzte E-Mails",
+        "feat3": "24/7 Priority Support",
+        "cta": "Kontaktieren"
+      }
+    }
+  },
   "footer": {
     "description": "Wir helfen Unternehmen mit einzigartigem Webdesign & smarten Systemen online erfolgreich zu sein.",
     "legal": {
