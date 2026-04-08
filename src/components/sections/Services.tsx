@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Globe, Users, Inbox, Calendar, Layout, Award, Share2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { usePrimaryOrg } from '../../hooks/usePrimaryOrg';
+
 
 const services = [
   {
@@ -29,7 +32,8 @@ const services = [
     image: '/img/service_web.png',
     titleKey: 'services.booking.title',
     descKey: 'services.booking.description',
-    delay: 0.4
+    delay: 0.4,
+    link: 'book'
   },
   {
     icon: Award,
@@ -54,8 +58,9 @@ const services = [
   }
 ];
 
-const ServiceCard = ({ icon: Icon, image, titleKey, descKey, delay }: any) => {
+const ServiceCard = ({ icon: Icon, image, titleKey, descKey, delay, link, orgSlug }: any) => {
   const { t } = useTranslation();
+  const href = link === 'book' && orgSlug ? `/o/${orgSlug}/book` : '#contact';
 
   return (
     <motion.div
@@ -88,16 +93,24 @@ const ServiceCard = ({ icon: Icon, image, titleKey, descKey, delay }: any) => {
         {t(descKey)}
       </p>
 
-      <button className="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-primary transition-colors">
-        {t('services.learnMore')}
-        <span className="text-lg">→</span>
-      </button>
+      {link === 'book' ? (
+        <Link to={href} className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
+            {t('services.learnMore')}
+            <span className="text-lg">→</span>
+        </Link>
+      ) : (
+        <a href={href} className="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-primary transition-colors">
+            {t('services.learnMore')}
+            <span className="text-lg">→</span>
+        </a>
+      )}
     </motion.div>
   );
 };
 
 const Services = () => {
   const { t } = useTranslation();
+  const { primarySlug } = usePrimaryOrg();
 
   return (
     <section id="services" className="py-24 bg-zinc-950 -mt-20 relative z-30 rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
@@ -124,7 +137,7 @@ const Services = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => (
-            <ServiceCard key={index} {...service} />
+            <ServiceCard key={index} {...service} orgSlug={primarySlug} />
           ))}
         </div>
       </div>

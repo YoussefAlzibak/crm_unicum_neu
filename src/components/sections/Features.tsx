@@ -11,7 +11,7 @@ const features = [
       'features.reputation.point2',
       'features.reputation.point3'
     ],
-    image: '/img/reputation-dark-de.webp',
+    image: '/img/Zentrale-Berichte.webp',
     reverse: true
   },
   {
@@ -22,12 +22,12 @@ const features = [
       'features.crm.point2',
       'features.crm.point3'
     ],
-    image: '/img/crm-system.webp',
+    video: '/img/SaaS Demo Video (1).mp4',
     reverse: false
   }
 ];
 
-const FeatureCard = ({ titleKey, descriptionKey, pointsKeys, image, reverse }: any) => {
+const FeatureCard = ({ titleKey, descriptionKey, pointsKeys, image, video, reverse }: any) => {
   const { t } = useTranslation();
 
   return (
@@ -60,14 +60,26 @@ const FeatureCard = ({ titleKey, descriptionKey, pointsKeys, image, reverse }: a
         transition={{ duration: 0.6 }}
         className="flex-1 relative"
       >
-        <div className="glass rounded-2xl overflow-hidden shadow-2xl shadow-primary/10">
-          <img 
-            src={image} 
-            alt={t(titleKey)} 
-            width="800" 
-            height="500" 
-            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
-          />
+        <div className="glass rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 border border-white/5 relative aspect-video">
+          {video ? (
+            <video 
+              src={video}
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          ) : (
+            <img 
+              src={image} 
+              alt={t(titleKey)} 
+              width="800" 
+              height="500" 
+              className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
       </motion.div>
     </div>

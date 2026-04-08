@@ -1,9 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Lock, Globe } from 'lucide-react';
+import { ShieldCheck, Lock, Globe, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { usePrimaryOrg } from '../../hooks/usePrimaryOrg';
+
 
 const Hero = () => {
   const { t } = useTranslation();
+  const { primarySlug } = usePrimaryOrg();
 
   return (
     <header id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -12,7 +16,7 @@ const Hero = () => {
       
       {/* Background Image */}
       <img
-        src="/img/hero_bg.png"
+        src="/img/logo menu.png"
         alt="Futuristic Tech Background"
         className="absolute inset-0 w-full h-full object-cover opacity-60"
       />
@@ -54,9 +58,16 @@ const Hero = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="#contact" className="bg-primary hover:bg-primary/80 text-white px-10 py-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/40 flex items-center justify-center">
-              {t('hero.cta_primary')}
-            </a>
+            {primarySlug ? (
+              <Link to={`/o/${primarySlug}/book`} className="bg-primary hover:bg-primary/80 text-white px-10 py-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/40 flex items-center justify-center gap-2">
+                <Calendar size={20} />
+                {t('hero.cta_primary')}
+              </Link>
+            ) : (
+              <a href="#contact" className="bg-primary hover:bg-primary/80 text-white px-10 py-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/40 flex items-center justify-center">
+                {t('hero.cta_primary')}
+              </a>
+            )}
             <a href="#services" className="bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-xl font-bold border border-white/10 transition-all backdrop-blur-xl flex items-center justify-center">
               {t('hero.cta_secondary')}
             </a>

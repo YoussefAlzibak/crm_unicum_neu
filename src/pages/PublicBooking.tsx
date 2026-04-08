@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, User, Mail, Phone, ChevronRight, CheckCircle, AlertCircle, Loader2, Zap, Target } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, ChevronRight, CheckCircle, AlertCircle, Loader2, Zap, Target, Globe, Shield, Award } from 'lucide-react';
 import { format, addDays, startOfDay, addMinutes, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -29,17 +29,14 @@ const PublicBooking = () => {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1); // 1: Service, 2: Date, 3: Time, 4: Details, 5: Success
   
-  const [selectedService, setSelectedService] = useState<{ name: string; duration: number } | null>(null);
+  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [services, setServices] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(addDays(new Date(), 1)));
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', note: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const services = [
-    { name: 'Strategiegespräch', duration: 45, desc: 'Individuelle Beratung zu Ihrer digitalen Strategie.', icon: Zap, color: 'text-purple-400' },
-    { name: 'Quick Tech-Audit', duration: 15, desc: 'Schneller Check Ihrer bestehenden Systeme.', icon: Clock, color: 'text-blue-400' },
-    { name: 'Full Roadmap Planning', duration: 90, desc: 'Detaillierte Planung Ihres nächsten Großprojekts.', icon: Target, color: 'text-green-400' },
-  ];
+  const IconMap: any = { Zap, Clock, Target, User, Mail, Globe, Shield, Award, Calendar: CalendarIcon };
 
   useEffect(() => {
     if (slug) fetchOrgData();
@@ -70,6 +67,16 @@ const PublicBooking = () => {
         working_hours_start: '09:00',
         working_hours_end: '17:00'
       });
+
+      // Fetch Services
+      const { data: servicesData } = await supabase
+        .from('booking_services')
+        .select('*')
+        .eq('org_id', orgData.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
+      
+      if (servicesData) setServices(servicesData);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -232,26 +239,29 @@ const PublicBooking = () => {
                     </div>
 
                     <div className="space-y-3">
-                      {services.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => { setSelectedService(s); setStep(2); }}
-                          className={`w-full p-5 rounded-2xl border text-left transition-all group flex items-center gap-4 ${
-                            selectedService?.name === s.name ? 'bg-primary/10 border-primary' : 'bg-white/5 border-white/5 hover:border-white/20'
-                          }`}
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <s.icon size={22} className={s.color} />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold">{s.name}</h3>
-                            <p className="text-xs text-gray-500">{s.desc}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{s.duration} min</span>
-                          </div>
-                        </button>
-                      ))}
+                      {services.map((s, i) => {
+                        const Icon = IconMap[s.icon] || Zap;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => { setSelectedService(s); setStep(2); }}
+                            className={`w-full p-5 rounded-2xl border text-left transition-all group flex items-center gap-4 ${
+                              selectedService?.id === s.id ? 'bg-primary/10 border-primary' : 'bg-white/5 border-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                              <Icon size={22} className={s.color} />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold">{s.name}</h3>
+                              <p className="text-xs text-gray-500">{s.description}</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{s.duration} min</span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 )}
