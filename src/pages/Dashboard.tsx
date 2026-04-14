@@ -1,25 +1,26 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { useOrg } from '../contexts/OrgContext';
 import { Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquare, Settings, TrendingUp, Mail, Calendar, Calculator, CreditCard, ShieldAlert } from 'lucide-react';
-import ContactsView from '../components/dashboard/ContactsView';
-import PipelineView from '../components/dashboard/PipelineView';
-import MessagesView from '../components/dashboard/MessagesView';
-import CampaignsView from '../components/dashboard/CampaignsView';
-import BookingView from '../components/dashboard/BookingView';
-import CalculatorView from '../components/dashboard/CalculatorView';
-import BillingView from '../components/dashboard/BillingView';
-import SuperAdminView from '../components/dashboard/SuperAdminView';
-import SettingsView from '../components/dashboard/SettingsView';
-import OverviewView from '../components/dashboard/OverviewView';
+import { LayoutDashboard, Users, MessageSquare, Settings, TrendingUp, Mail, Calendar, Calculator, CreditCard, ShieldAlert, Loader2 } from 'lucide-react';
 import TopBar from '../components/dashboard/TopBar';
 import { AnimatePresence, motion } from 'framer-motion';
+
+const ContactsView = lazy(() => import('../components/dashboard/ContactsView'));
+const PipelineView = lazy(() => import('../components/dashboard/PipelineView'));
+const MessagesView = lazy(() => import('../components/dashboard/MessagesView'));
+const CampaignsView = lazy(() => import('../components/dashboard/CampaignsView'));
+const BookingView = lazy(() => import('../components/dashboard/BookingView'));
+const CalculatorView = lazy(() => import('../components/dashboard/CalculatorView'));
+const BillingView = lazy(() => import('../components/dashboard/BillingView'));
+const SuperAdminView = lazy(() => import('../components/dashboard/SuperAdminView'));
+const SettingsView = lazy(() => import('../components/dashboard/SettingsView'));
+const OverviewView = lazy(() => import('../components/dashboard/OverviewView'));
 
 type View = 'overview' | 'contacts' | 'pipeline' | 'messages' | 'campaigns' | 'booking' | 'calculators' | 'billing' | 'super-admin' | 'settings';
 
 
 const Dashboard = () => {
-  const { user, profile, currentOrg, isLoading, signOut } = useOrg();
+  const { user, profile, currentOrg, isLoading } = useOrg();
   const [activeView, setActiveView] = useState<View>('overview');
   if (isLoading) {
     return (
@@ -104,7 +105,13 @@ const Dashboard = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
-              {renderContent()}
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-20">
+                  <Loader2 className="animate-spin text-primary" size={40} />
+                </div>
+              }>
+                {renderContent()}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>

@@ -6,12 +6,10 @@ import {
   TrendingUp, 
   Mail, 
   Calendar, 
-  MessageSquare, 
   ArrowUpRight, 
   ArrowDownRight,
   Activity,
   Zap,
-  Target,
   ChevronRight,
   Loader2
 } from 'lucide-react';
@@ -23,10 +21,7 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+  ResponsiveContainer
 } from 'recharts';
 
 interface OverviewStats {
